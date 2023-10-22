@@ -1,80 +1,155 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <link rel="stylesheet" href="style.css">
-    <title>Vats  Portfolio</title>
-
+    <title>ATM</title>
+    <style>
+        body {
+            background: linear-gradient(to right, #1f4037, #99f2c8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+        h1 {
+            margin-bottom: 50px;
+        }
+        .atm-button {
+            width: 100px;
+            height: 50px;
+            margin: 10px;
+            border-radius: 12px;
+            background-color: #4CAF50; /* Green */
+            border: none;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            transition-duration: 0.4s;
+            cursor: pointer;
+        }
+        .atm-button:hover {
+            background-color: #45a049;
+        }
+        .transaction-history {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <nav>
-            <div class="left">Vats's Portfolio</div>
-            <div class="right">
-                <ul>
-                    <li><a href="/">Home</a></li>
-                    <li><a href="/">About</a></li>
-                    <li><a href="/">Services</a></li>
-                    <li><a href="/">contact me</a></li>
-                </ul>
-            </div>
-        
-        </nav>
-    </header>
-    <main>
-      <section class="firstsection">
-        <div class="leftsection">
-            Hi,My name is <span class="purple">Vats</span>
-           <div> and I am a </div>
-           <span id="element" class="purple1"></span>
-
-        </div>
-        
-        <div class="rightsection"></div>
-        <img src="bg.png" alt style="
-        width: 50%;
-        height: 50%;
-        ">
-      </section>
-      <hr>
-      <section class="secondsection">
-        <span class="gray">
-            What I have done so far
-        </span>
-        <h1>work Experience</h1>
-        - Currently on a learning journey to acquire new skills in programming.
-        <div>
-        - Possess a basic foundation in the C programming language.
-        </div>
-        - I am currently enrolled in a data analytics course on Coursera, where I am acquiring valuable skills and knowledge in the field of data analysis
-
-
-        <div class="box">
-          
+    <h1>ATM</h1>
+    <div id="signup-login">
+        <input type="text" id="accountNo" placeholder="Enter your account number">
+        <input type="password" id="pin" placeholder="Enter your pin">
+        <button class="atm-button" onclick="signup()">Sign Up</button>
+        <button class="atm-button" onclick="login()">Login</button>
     </div>
-</section>
-    </main>
-    <footer class="ab">
-        <div>
-<H3>Vats's Portfolio</H3>
-<h5>UNDER CONSTRUCTION</h5>
-<img src="bg2.png" alt="">
+    <div id="atm" style="display: none;">
+        <input type="number" id="amount" placeholder="Enter amount">
+        <button class="atm-button" onclick="withdraw()">Withdraw</button>
+        <button class="atm-button" onclick="deposit()">Deposit</button>
+        <button class="atm-button" onclick="checkBalance()">Check Balance</button>
+        <button class="atm-button" onclick="logout()">Logout</button>
+        <div class="transaction-history">
+            <h3>Transaction History</h3>
+            <ul id="transactionList"></ul>
         </div>
-    </footer>
-    <script src="https://unpkg.com/typed.js@2.0.16/dist/typed.umd.js"></script>
-    <script>
-    var options = {
-        strings: ['Web Developer','Web Designer','Video Editor'],
-        typeSpeed: 55,
-        onComplete: function () {
-            var cursor = document.querySelector('.typed-cursor');
-            if (cursor) {
-                cursor.style.display = 'none';
-            }
-        },
-    };
+    </div>
 
-    var typed = new Typed('#element', options);
-</script>
+    <script>
+        var balance = localStorage.getItem('balance') || 1000; // initial balance
+        var transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+
+        function signup() {
+            var accountNo = document.getElementById('accountNo').value;
+            var pin = document.getElementById('pin').value;
+            if(accountNo === "" || pin === "") {
+                alert("Account number or pin cannot be empty. Please try again.");
+            } else {
+                localStorage.setItem('accountNo', accountNo);
+                localStorage.setItem('pin', pin);
+                alert("Account created successfully! You can now log in.");
+            }
+        }
+
+        function login() {
+            var enteredAccountNo = document.getElementById('accountNo').value;
+            var enteredPin = document.getElementById('pin').value;
+            if(enteredAccountNo === localStorage.getItem('accountNo') && enteredPin === localStorage.getItem('pin')) {
+                document.getElementById('signup-login').style.display = 'none';
+                document.getElementById('atm').style.display = 'block';
+                alert("Welcome to the ATM!");
+            } else {
+                alert("Incorrect account number or pin. Please try again.");
+            }
+        }
+
+        function logout() {
+            document.getElementById('atm').style.display = 'none';
+            document.getElementById('signup-login').style.display = 'block';
+        }
+
+        function withdraw() {
+            var amount = Number(document.getElementById('amount').value);
+            if (amount <= balance) {
+                balance -= amount;
+                transactions.push({ type: 'withdraw', amount: amount });
+                localStorage.setItem('balance', balance);
+                localStorage.setItem('transactions', JSON.stringify(transactions));
+                updateTransactionHistory();
+                alert("Withdraw successful. New balance: " + balance);
+            } else {
+                alert("Insufficient balance.");
+            }
+        }
+
+        function deposit() {
+            var amount = Number(document.getElementById('amount').value);
+            balance += amount;
+            transactions.push({ type: 'deposit', amount: amount });
+            localStorage.setItem('balance', balance);
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            updateTransactionHistory();
+            alert("Deposit successful. New balance: " + balance);
+        }
+
+        function checkBalance() {
+            alert("Your balance is: " + balance);
+        }
+
+        function updateTransactionHistory() {
+            var transactionList = document.getElementById('transactionList');
+            transactionList.innerHTML = '';
+            transactions.forEach(function(transaction) {
+                var listItem = document.createElement('li');
+                listItem.textContent = transaction.type + ': ' + transaction.amount;
+                transactionList.appendChild(listItem);
+            });
+        }
+
+        // Restore saved account number, pin, balance, and transactions on page load
+        window.addEventListener('load', function() {
+            var savedAccountNo = localStorage.getItem('accountNo');
+            var savedPin = localStorage.getItem('pin');
+            var savedBalance = localStorage.getItem('balance');
+            var savedTransactions = localStorage.getItem('transactions');
+            if (savedAccountNo && savedPin) {
+                document.getElementById('accountNo').value = savedAccountNo;
+                document.getElementById('pin').value = savedPin;
+            }
+            if (savedBalance) {
+                balance = Number(savedBalance);
+            }
+            if (savedTransactions) {
+                transactions = JSON.parse(savedTransactions);
+                updateTransactionHistory();
+            }
+        });
+    </script>
 </body>
 </html>
